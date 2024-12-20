@@ -3,7 +3,6 @@ from database.database import consumer_db_session  # SQLModel session dependency
 from database.models import Apartment, Booking  # SQLModel models
 from sqlmodel import Session
 
-
 def update_apartments_table(session: Session):
     """
     Fetch apartment data from the given endpoint and update the apartments table.

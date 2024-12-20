@@ -5,8 +5,6 @@ from consumer import start_consumer
 from routers.search import router as search_router
 from initialization import initialize_data
 
-DATABASE = "./database/search.db"
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
