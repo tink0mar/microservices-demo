@@ -1,0 +1,14 @@
+
+services:
+  apartment_api:
+    volumes:
+      - ./apartment_api/app:/app
+
+  booking_api:
+    volumes:
+      - ./booking_api/app:/app
+
+  search_api:
+    volumes:
+      - ./search_api/app:/app
+
