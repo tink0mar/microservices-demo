@@ -1,7 +1,7 @@
 from typing import Annotated
 from fastapi import APIRouter, HTTPException, Depends
 from sqlmodel import Session, select
-from database.models import Apartment, ApartmentIn, ApartmentOut
+from database.models import Apartment, ApartmentCreate
 from database.database import get_db_session  # Dependency to get DB session
 import pika
 import json
@@ -26,8 +26,8 @@ def publish_event(event_name, data):
     connection.close()
 
 
-@router.post("/", status_code=201)
-def add_apartment(apartment: ApartmentIn, session: SessionDep):
+@router.post("/", status_code=201, response_model=Apartment)
+def add_apartment(apartment: ApartmentCreate, session: SessionDep):
     """Add a new apartment"""
     apartments = session.exec(
         select(Apartment).where(Apartment.name == apartment.name)
@@ -46,14 +46,14 @@ def add_apartment(apartment: ApartmentIn, session: SessionDep):
     return new_apartment
 
 
-@router.get("/", response_model=list[ApartmentOut])
+@router.get("/", response_model=list[Apartment])
 def list_apartments(session: SessionDep):
     """List all apartments"""
     apartments = session.exec(select(Apartment)).all()
     return apartments
 
 
-@router.delete("/{apartment_id}", response_model=ApartmentOut)
+@router.delete("/{apartment_id}")
 def remove_apartment(apartment_id: str, session: SessionDep):
     """Remove an apartment by ID"""
     apartment = session.get(Apartment, apartment_id)

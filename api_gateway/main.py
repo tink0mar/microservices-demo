@@ -12,12 +12,16 @@ services = {
 
 
 def forward_request(
-    service_url: str, method: str, path: str, body=None, headers=None
+    service: str, method: str, path: str, body=None, headers=None, params=None
 ):
-    if not path.endswith("/"):
-        path += "/"  # Append trailing slash if missing
+    service_url = services[service]
+
     url = f"{service_url}{path}"
-    response = requests.request(method, url, json=body, headers=headers)
+    print(url, flush=True)
+    response = requests.request(
+        method, url, json=body, headers=headers, params=params
+    )
+    print(response, flush=True)
     return response
 
 
@@ -27,17 +31,19 @@ def forward_request(
 async def gateway(service: str, path: str, request: Request):
     if service not in services.keys():
         raise HTTPException(status_code=404, detail="Service not found")
+    print(path, flush=True)
 
-    service_url = services[service]
     body = (
         await request.json()
-        if request.method in ["POST", "PUT", "PATCH"]
+        if request.method in ["POST", "PUT", "PATCH"] and await request.body()
         else None
     )
+
     headers = dict(request.headers)
+    params = dict(request.query_params)
 
     response = forward_request(
-        service_url, request.method, f"/{path}", body, headers
+        service, request.method, f"/{path}", body, headers, params
     )
 
     return JSONResponse(

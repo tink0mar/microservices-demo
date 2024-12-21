@@ -1,4 +1,4 @@
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, Relationship
 import uuid
 
 
@@ -10,6 +10,9 @@ class Apartment(SQLModel, table=True):
     address: str
     noiselevel: float
     floor: int
+    bookings: list["Booking"] = Relationship(
+        back_populates="apartment", cascade_delete=True
+    )
 
 
 class BookingBase(SQLModel):
@@ -19,10 +22,11 @@ class BookingBase(SQLModel):
 
 
 class Booking(BookingBase, table=True):
-    apartment_id: str = Field(foreign_key="apartment.id")
     start_date: str
     end_date: str
     guest: str
+    apartment_id: str = Field(foreign_key="apartment.id", ondelete="CASCADE")
+    apartment: Apartment = Relationship(back_populates="bookings")
 
 
 class BookingUpdate(BookingBase):
