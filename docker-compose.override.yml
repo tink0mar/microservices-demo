@@ -12,3 +12,6 @@ services:
     volumes:
       - ./search_api/app:/app
 
+  api_gateway:
+    volumes:
+      - ./api_gateway/:/app

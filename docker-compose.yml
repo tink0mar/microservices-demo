@@ -32,6 +32,12 @@ services:
       sleep 15 &&
       uvicorn main:app --host 0.0.0.0 --port 8001 --reload
       "
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://apartment_api:8000"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
 
   search_api:
     build:
@@ -48,20 +54,26 @@ services:
       sleep 15 &&
       uvicorn main:app --host 0.0.0.0 --port 8002 --reload
       "
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://apartment_api:8000 || exit 1 && curl -f http://booking_api:8001 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
-  #api-gateway:
-  #  build:
-  #    context: ./api_gateway
-  #  container_name: api_gateway
-  #  ports:
-  #    - "8003:8003"
-  #  networks:
-  #    - api_network
-  #  command: >
-  #    sh -c "
-  #    sleep 15 &&
-  #    uvicorn main:app --host 0.0.0.0 --port 8003 --reload
-  #    "
+
+  api_gateway:
+    build:
+      context: ./api_gateway
+    container_name: api_gateway
+    ports:
+      - "8003:8003"
+    networks:
+      - api_network
+    command: >
+      sh -c "
+      sleep 15 &&
+      uvicorn main:app --host 0.0.0.0 --port 8003 --reload
+      "
 
   rabbitmq:
     image: "rabbitmq:3-management"
