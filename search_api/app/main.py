@@ -5,6 +5,7 @@ from consumer import start_consumer
 from routers.search import router as search_router
 from initialization import initialize_data
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
@@ -12,6 +13,7 @@ async def lifespan(app: FastAPI):
     """
     # Initialize the database
     from database.database import init_db
+
     init_db()
 
     initialize_data()
@@ -27,11 +29,19 @@ async def lifespan(app: FastAPI):
         print("Stopping RabbitMQ Consumer...", flush=True)
         thread.join(timeout=5)  # Ensure thread finishes gracefully (optional)
 
+
 app = FastAPI(lifespan=lifespan)
 
 # Include the search router
 app.include_router(search_router, tags=["Search"])
 
+
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}
+
+
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8002)

@@ -11,11 +11,16 @@ services:
       - ./apartment_api/app/database:/app/database
     networks:
       - api_network
-    command: >
-      sh -c "
-      sleep 15 &&
-      uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-      "
+    command: 
+      " uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test:  "curl -f http://localhost:8000/health"
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
   booking_api:
     build:
@@ -27,14 +32,14 @@ services:
       - ./booking_api/app/database:/app/database
     networks:
       - api_network
-    command: >
-      sh -c "
-      sleep 15 &&
-      uvicorn main:app --host 0.0.0.0 --port 8001 --reload
-      "
+    command: 
+      "uvicorn main:app --host 0.0.0.0 --port 8001 --reload"
+    depends_on:
+      apartment_api:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://apartment_api:8000"]
-      interval: 10s
+      test:  "curl -f http://localhost:8001/health"
+      interval: 30s
       timeout: 5s
       retries: 3
 
@@ -49,18 +54,18 @@ services:
       - ./search_api/app/database:/app/database
     networks:
       - api_network
-    command: >
-      sh -c "
-      sleep 15 &&
-      uvicorn main:app --host 0.0.0.0 --port 8002 --reload
-      "
+    command:
+      "uvicorn main:app --host 0.0.0.0 --port 8002 --reload"
+    depends_on:
+     booking_api:
+        condition: service_healthy 
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://apartment_api:8000 || exit 1 && curl -f http://booking_api:8001 || exit 1"]
-      interval: 10s
+      test:  "curl -f http://localhost:8002/health"
+      interval: 30s
       timeout: 5s
       retries: 3
 
-
+      
   api_gateway:
     build:
       context: ./api_gateway
@@ -69,20 +74,31 @@ services:
       - "8003:8003"
     networks:
       - api_network
-    command: >
-      sh -c "
-      sleep 15 &&
-      uvicorn main:app --host 0.0.0.0 --port 8003 --reload
-      "
+    command: 
+      "uvicorn main:app --host 0.0.0.0 --port 8003 --reload"
+    depends_on:
+     search_api:
+        condition: service_healthy
+    healthcheck:
+      test:  "curl -f http://localhost:8003/health"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      
 
   rabbitmq:
-    image: "rabbitmq:3-management"
+    image: "rabbitmq:3-management-alpine"
     container_name: rabbitmq
     ports:
       - "5672:5672"    # Broker port
-      - "40672:40672"  # Management UI
+      - "15672:15672"  # Management UI
     networks:
       - api_network
+    healthcheck:
+      test: ['CMD', 'rabbitmqctl', 'status']
+      interval: 10s
+      timeout: 10s
+      retries: 10
 
 networks:
   api_network:

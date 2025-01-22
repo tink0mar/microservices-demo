@@ -50,3 +50,8 @@ async def gateway(service: str, path: str, request: Request):
         status_code=response.status_code,
         content=response.json() if response.content else None,
     )
+
+
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}

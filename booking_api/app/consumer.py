@@ -1,7 +1,7 @@
 import pika
 import json
 from threading import Thread
-from database.models import Apartment
+from database.models import Apartment, Booking
 from database.database import (
     consumer_db_session,
 )  # Now using the SQLModel session
